@@ -15,14 +15,6 @@ tanpa kredensial statis di dalam repo.
 | OpenWeatherMap | AQI dan polutan (pembanding) | API key |
 | MAGMA Indonesia | Aktivitas gunung api (scraping) | tidak perlu |
 
-## Alur
-
-```text
-CI   push / pull_request (dev, main)  →  ruff → pytest → smoke run offline → artifact
-CD   push main · jadwal 04.00 WIB · manual
-     → azure/login (OIDC) → ingestion → upload ke Azure Blob → verifikasi blob
-```
-
 ## Struktur
 
 ```text
