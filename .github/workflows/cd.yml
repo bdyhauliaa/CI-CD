@@ -8,8 +8,8 @@ on:
       - "requirements.txt"
       - ".github/workflows/cd.yml"
   schedule:
-    # 21:00 UTC = 04:00 WIB, setiap hari
-    - cron: "0 21 * * *"
+    # Setiap 6 jam: 00, 06, 12, 18 UTC = 01.00, 07.00, 13.00, 19.00 WIB
+    - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
       sources:
