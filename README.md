@@ -1,7 +1,4 @@
-# CI-CD — Ingestion Data Lingkungan Indonesia
-
-[![CI](https://github.com/bdyhauliaa/CI-CD/actions/workflows/ci.yml/badge.svg)](https://github.com/bdyhauliaa/CI-CD/actions/workflows/ci.yml)
-[![CD](https://github.com/bdyhauliaa/CI-CD/actions/workflows/cd.yml/badge.svg)](https://github.com/bdyhauliaa/CI-CD/actions/workflows/cd.yml)
+# Implementasi CI-CD 
 
 Pipeline pengambilan data titik panas kebakaran hutan, kualitas udara, cuaca, dan aktivitas
 gunung api. Setiap perubahan kode diuji otomatis lewat **GitHub Actions** (CI), lalu hasil
