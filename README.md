@@ -62,10 +62,6 @@ tanpa menyimpan kredensial statis (autentikasi **OIDC** ke Microsoft Entra ID).
 ├── tests/
 │   ├── test_parsers.py        # tes parser tanpa jaringan
 │   └── fixtures/              # contoh respons tiap sumber
-├── docs/
-│   ├── SETUP_AZURE.md         # panduan 7 langkah portal Azure
-│   ├── CHECKLIST_SS.md        # daftar bukti screenshot A–J
-│   └── LAPORAN.md             # kerangka laporan
 ├── data/.gitkeep              # hasil run (di-ignore)
 ├── .env.example
 ├── pyproject.toml
@@ -191,8 +187,8 @@ scraping-results/
 | `ci.yml` | `push` & `pull_request` ke `dev`/`main`, `workflow_dispatch` | ruff, pytest, smoke run offline, artifact |
 | `cd.yml` | `push` ke `main`, `schedule` (`0 21 * * *` = 04.00 WIB), `workflow_dispatch` | OIDC login, ingestion, upload, verifikasi blob |
 
-Setup Azure: lihat [`docs/SETUP_AZURE.md`](docs/SETUP_AZURE.md).
-Daftar bukti untuk laporan: [`docs/CHECKLIST_SS.md`](docs/CHECKLIST_SS.md).
+Konfigurasi Azure (resource group, storage account, app registration, federated credential,
+dan role) mengikuti langkah pada laporan tugas.
 
 ---
 
