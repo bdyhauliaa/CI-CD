@@ -15,6 +15,14 @@ tanpa kredensial statis di dalam repo.
 | OpenWeatherMap | AQI dan polutan (pembanding) | API key |
 | MAGMA Indonesia | Aktivitas gunung api (scraping) | tidak perlu |
 
+## Alur
+
+```text
+CI   push / pull_request (dev, main)  →  ruff → pytest → smoke run offline → artifact
+CD   push main · jadwal 04.00 WIB · manual
+     → azure/login (OIDC) → ingestion → upload ke Azure Blob → verifikasi blob
+```
+
 ## Struktur
 
 ```text
@@ -95,6 +103,14 @@ Untuk lokal, nilai yang sama diisi di `.env` (sudah di-`.gitignore`).
 
 Jadwal CD: `0 21 * * *` (UTC) = **04.00 WIB** setiap hari, bisa juga dijalankan manual dari
 tab **Actions** dengan input `sources` dan `days`.
+
+Hasil upload tersimpan per eksekusi, sehingga run baru tidak menimpa run sebelumnya:
+
+```text
+scraping/runs/<waktu>_<run_id>/
+├── manifest.json
+└── processed/{air,firms,magma,owm,weather}_<waktu>.json
+```
 
 ## Catatan
 
