@@ -25,7 +25,7 @@ def upload_directory(local_dir: Path, account: str, container: str, prefix: str)
 
     uploaded = 0
     for path in sorted(local_dir.rglob("*")):
-        if not path.is_file():
+        if not path.is_file() or path.name.startswith("."):
             continue
         blob_name = f"{prefix}/{path.relative_to(local_dir).as_posix()}"
         container_client.upload_blob(name=blob_name, data=path.read_bytes(), overwrite=True)
