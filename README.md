@@ -101,6 +101,9 @@ Untuk lokal, nilai yang sama diisi di `.env` (sudah di-`.gitignore`).
 | `ci.yml` | `push` & `pull_request` ke `dev`/`main` | ruff, pytest, smoke run offline, artifact |
 | `cd.yml` | `push` ke `main`, `schedule`, `workflow_dispatch` | OIDC login, ingestion, upload, verifikasi blob |
 
+Merge ke `main` hanya dapat dilakukan jika status check **Lint, Test & Smoke Run** lolos
+(branch protection), sehingga CD tidak pernah menerima kode yang gagal CI.
+
 Jadwal CD: `0 21 * * *` (UTC) = **04.00 WIB** setiap hari, bisa juga dijalankan manual dari
 tab **Actions** dengan input `sources` dan `days`.
 
