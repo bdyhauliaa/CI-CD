@@ -5,6 +5,13 @@ from __future__ import annotations
 from pathlib import Path
 
 
+def iter_upload_files(root: Path) -> list[Path]:
+    """Berkas yang akan diunggah; berkas tersembunyi seperti .gitkeep dilewati."""
+    return [
+        path for path in sorted(root.rglob("*")) if path.is_file() and not path.name.startswith(".")
+    ]
+
+
 def upload_directory(local_dir: Path, account: str, container: str, prefix: str) -> int:
     """Unggah seluruh berkas di ``local_dir`` ke ``container/prefix``.
 
@@ -23,11 +30,8 @@ def upload_directory(local_dir: Path, account: str, container: str, prefix: str)
     )
     container_client = service.get_container_client(container)
 
-    uploaded = 0
-    for path in sorted(local_dir.rglob("*")):
-        if not path.is_file() or path.name.startswith("."):
-            continue
+    files = iter_upload_files(local_dir)
+    for path in files:
         blob_name = f"{prefix}/{path.relative_to(local_dir).as_posix()}"
         container_client.upload_blob(name=blob_name, data=path.read_bytes(), overwrite=True)
-        uploaded += 1
-    return uploaded
+    return len(files)
