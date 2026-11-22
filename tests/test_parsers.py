@@ -1,9 +1,11 @@
-"""Tes parser memakai fixture, sehingga tidak butuh jaringan maupun API key."""
+"""Tes parser dan helper memakai fixture, sehingga tidak butuh jaringan maupun API key."""
 
 import json
 from pathlib import Path
 
-from src.sources import air, firms, magma
+from src.main import write_json
+from src.sources import air, firms, magma, owm, weather
+from src.storage import iter_upload_files
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -49,3 +51,43 @@ def test_magma_generic_table_fallback() -> None:
 
     assert len(records) == 1
     assert records[0]["raw"]["gunung"] == "Merapi"
+
+
+def test_parse_weather_uses_latest_hour() -> None:
+    payload = json.loads((FIXTURES / "weather_sample.json").read_text(encoding="utf-8"))
+    record = weather.parse_weather(payload, "Jakarta")
+
+    assert record["location"] == "Jakarta"
+    assert record["temperature_2m"] == 27.8
+    assert record["wind_speed_10m"] == 6.1
+
+
+def test_parse_owm_air_pollution_components() -> None:
+    payload = json.loads((FIXTURES / "owm_sample.json").read_text(encoding="utf-8"))
+    record = owm.parse_air_pollution(payload, "Jakarta")
+
+    assert record["aqi_index"] == 2
+    assert record["pm2_5"] == 14.7
+    assert record["ozone"] == 96.2
+
+
+def test_write_json_records_metadata(tmp_path) -> None:
+    target = tmp_path / "processed" / "sample.json"
+    info = write_json(target, [{"source": "test"}])
+
+    assert target.exists()
+    assert info["bytes"] > 0
+    assert len(info["sha256"]) == 64
+    assert info["file"].endswith("sample.json")
+
+
+def test_iter_upload_files_skips_hidden(tmp_path) -> None:
+    (tmp_path / ".gitkeep").write_text("", encoding="utf-8")
+    (tmp_path / "manifest.json").write_text("{}", encoding="utf-8")
+    processed = tmp_path / "processed"
+    processed.mkdir()
+    (processed / "firms.json").write_text("[]", encoding="utf-8")
+
+    files = iter_upload_files(tmp_path)
+
+    assert [path.name for path in files] == ["manifest.json", "firms.json"]

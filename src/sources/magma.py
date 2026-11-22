@@ -15,10 +15,10 @@ MAGMA_PAGE_URL = "https://magma.esdm.go.id/"
 LEVEL_PATTERN = re.compile(r"Level\s+(IV|III|II|I)\s*\(([^)]+)\)")
 
 
-def fetch_volcano_activity() -> list[dict]:
+def fetch_volcano_activity(timeout: int = 30) -> list[dict]:
     """Coba endpoint JSON; bila tidak tersedia, scraping tabel tingkat aktivitas."""
     try:
-        response = SESSION.get(MAGMA_JSON_URL, timeout=30)
+        response = SESSION.get(MAGMA_JSON_URL, timeout=timeout)
         if response.ok and "json" in response.headers.get("Content-Type", ""):
             records = parse_json_activity(response.json())
             if records:
@@ -26,14 +26,14 @@ def fetch_volcano_activity() -> list[dict]:
     except Exception:
         pass
 
-    response = SESSION.get(MAGMA_ACTIVITY_URL, timeout=30)
+    response = SESSION.get(MAGMA_ACTIVITY_URL, timeout=timeout)
     response.raise_for_status()
     records = parse_activity_table(response.text)
     if records:
         return records
 
     # Cadangan terakhir: tabel generik pada beranda.
-    response = SESSION.get(MAGMA_PAGE_URL, timeout=30)
+    response = SESSION.get(MAGMA_PAGE_URL, timeout=timeout)
     response.raise_for_status()
     return parse_html_table(response.text)
 
