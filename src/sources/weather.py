@@ -8,7 +8,7 @@ WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
 HOURLY = "temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m"
 
 
-def fetch_weather(latitude: float, longitude: float, location: str) -> dict:
+def fetch_weather(latitude: float, longitude: float, location: str, timeout: int = 30) -> dict:
     params = {
         "latitude": latitude,
         "longitude": longitude,
@@ -16,7 +16,7 @@ def fetch_weather(latitude: float, longitude: float, location: str) -> dict:
         "timezone": "Asia/Jakarta",
         "forecast_days": 1,
     }
-    response = SESSION.get(WEATHER_URL, params=params, timeout=30)
+    response = SESSION.get(WEATHER_URL, params=params, timeout=timeout)
     response.raise_for_status()
     return parse_weather(response.json(), location)
 

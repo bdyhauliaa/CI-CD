@@ -19,6 +19,7 @@ def fetch_hotspots(
     map_key: str,
     days: int = 1,
     sensors: tuple[str, ...] = DEFAULT_SENSORS,
+    timeout: int = 90,
 ) -> list[dict]:
     """Ambil hotspot dari Area API, mencoba sensor berikutnya bila kosong."""
     if not map_key:
@@ -27,7 +28,7 @@ def fetch_hotspots(
     bbox = ",".join(f"{value:g}" for value in INDONESIA_BBOX)
     for sensor in sensors:
         url = f"{FIRMS_URL}/{map_key}/{sensor}/{bbox}/{days}"
-        response = SESSION.get(url, timeout=90)
+        response = SESSION.get(url, timeout=timeout)
         response.raise_for_status()
         head = response.text[:200]
         if "Invalid" in head:

@@ -41,21 +41,28 @@ def read_fixture(name: str) -> str:
 def run_firms(settings: Settings, days: int, offline: bool) -> list[dict]:
     if offline:
         return firms.parse_hotspots(read_fixture("firms_sample.csv"))
-    return firms.fetch_hotspots(settings.firms_map_key, days=days)
+    timeout = max(settings.request_timeout, 60)
+    return firms.fetch_hotspots(settings.firms_map_key, days=days, timeout=timeout)
 
 
 def run_air(settings: Settings, days: int, offline: bool) -> list[dict]:
     if offline:
         payload = json.loads(read_fixture("air_sample.json"))
         return [air.parse_air_quality(payload, "Jakarta")]
-    return [air.fetch_air_quality(lat, lon, name) for name, (lat, lon) in DEFAULT_LOCATIONS.items()]
+    return [
+        air.fetch_air_quality(lat, lon, name, timeout=settings.request_timeout)
+        for name, (lat, lon) in DEFAULT_LOCATIONS.items()
+    ]
 
 
 def run_weather(settings: Settings, days: int, offline: bool) -> list[dict]:
     if offline:
         payload = json.loads(read_fixture("weather_sample.json"))
         return [weather.parse_weather(payload, "Jakarta")]
-    return [weather.fetch_weather(lat, lon, name) for name, (lat, lon) in DEFAULT_LOCATIONS.items()]
+    return [
+        weather.fetch_weather(lat, lon, name, timeout=settings.request_timeout)
+        for name, (lat, lon) in DEFAULT_LOCATIONS.items()
+    ]
 
 
 def run_owm(settings: Settings, days: int, offline: bool) -> list[dict]:
@@ -63,7 +70,9 @@ def run_owm(settings: Settings, days: int, offline: bool) -> list[dict]:
         payload = json.loads(read_fixture("owm_sample.json"))
         return [owm.parse_air_pollution(payload, "Jakarta")]
     return [
-        owm.fetch_air_pollution(lat, lon, name, settings.owm_api_key)
+        owm.fetch_air_pollution(
+            lat, lon, name, settings.owm_api_key, timeout=settings.request_timeout
+        )
         for name, (lat, lon) in DEFAULT_LOCATIONS.items()
     ]
 
@@ -71,7 +80,7 @@ def run_owm(settings: Settings, days: int, offline: bool) -> list[dict]:
 def run_magma(settings: Settings, days: int, offline: bool) -> list[dict]:
     if offline:
         return magma.parse_activity_table(read_fixture("magma_aktivitas_sample.html"))
-    return magma.fetch_volcano_activity()
+    return magma.fetch_volcano_activity(timeout=settings.request_timeout)
 
 
 SOURCES = {

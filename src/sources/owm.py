@@ -7,11 +7,17 @@ from src.sources.base import SESSION
 OWM_URL = "https://api.openweathermap.org/data/2.5/air_pollution"
 
 
-def fetch_air_pollution(latitude: float, longitude: float, location: str, api_key: str) -> dict:
+def fetch_air_pollution(
+    latitude: float,
+    longitude: float,
+    location: str,
+    api_key: str,
+    timeout: int = 30,
+) -> dict:
     if not api_key:
         raise RuntimeError("OPENWEATHER_API_KEY belum diisi")
     params = {"lat": latitude, "lon": longitude, "appid": api_key}
-    response = SESSION.get(OWM_URL, params=params, timeout=30)
+    response = SESSION.get(OWM_URL, params=params, timeout=timeout)
     response.raise_for_status()
     return parse_air_pollution(response.json(), location)
 

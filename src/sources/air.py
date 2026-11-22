@@ -8,7 +8,7 @@ AIR_URL = "https://air-quality-api.open-meteo.com/v1/air-quality"
 HOURLY = "pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone,us_aqi"
 
 
-def fetch_air_quality(latitude: float, longitude: float, location: str) -> dict:
+def fetch_air_quality(latitude: float, longitude: float, location: str, timeout: int = 30) -> dict:
     """Ambil satu titik lokasi, kembalikan jam terakhir yang tersedia."""
     params = {
         "latitude": latitude,
@@ -17,7 +17,7 @@ def fetch_air_quality(latitude: float, longitude: float, location: str) -> dict:
         "timezone": "Asia/Jakarta",
         "forecast_days": 1,
     }
-    response = SESSION.get(AIR_URL, params=params, timeout=30)
+    response = SESSION.get(AIR_URL, params=params, timeout=timeout)
     response.raise_for_status()
     return parse_air_quality(response.json(), location)
 
