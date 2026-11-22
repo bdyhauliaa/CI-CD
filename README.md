@@ -96,8 +96,9 @@ Untuk lokal, nilai yang sama diisi di `.env` (sudah di-`.gitignore`).
 Merge ke `main` hanya dapat dilakukan jika status check **Lint, Test & Smoke Run** lolos
 (branch protection), sehingga CD tidak pernah menerima kode yang gagal CI.
 
-Jadwal CD: `0 21 * * *` (UTC) = **04.00 WIB** setiap hari, bisa juga dijalankan manual dari
-tab **Actions** dengan input `sources` dan `days`.
+Jadwal CD: `0 */6 * * *` (UTC) = **setiap 6 jam**, yaitu pukul 01.00, 07.00, 13.00, dan
+19.00 WIB. Workflow juga bisa dijalankan manual dari tab **Actions** dengan input `sources`
+dan `days`.
 
 Hasil upload tersimpan per eksekusi, sehingga run baru tidak menimpa run sebelumnya:
 
