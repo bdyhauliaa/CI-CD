@@ -33,6 +33,8 @@ jobs:
   deploy:
     name: Ingest & Upload to Azure Storage
     runs-on: ubuntu-latest
+    # Run manual hanya diizinkan dari branch main (subject credential = refs/heads/main)
+    if: github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
