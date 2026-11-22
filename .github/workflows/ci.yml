@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, Test & Smoke Run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Pytest
+        run: pytest -q
+
+      - name: Smoke run (offline fixtures)
+        run: python -m src.main --offline --out data
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingestion-smoke-${{ github.run_id }}
+          path: |
+            data/processed
+            data/manifest.json
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Job summary
+        if: always()
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          import pathlib
+
+          path = pathlib.Path("data/manifest.json")
+          if not path.exists():
+              print("manifest.json tidak ditemukan")
+              raise SystemExit(0)
+
+          manifest = json.loads(path.read_text())
+          print("### Hasil smoke run")
+          print("| Sumber | Status | Jumlah record |")
+          print("| --- | --- | --- |")
+          for name, info in manifest["sources"].items():
+              print(f"| {name} | {info['status']} | {info.get('records', 0)} |")
+          PY

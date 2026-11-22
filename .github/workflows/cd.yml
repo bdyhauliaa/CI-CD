@@ -1,0 +1,109 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "requirements.txt"
+      - ".github/workflows/cd.yml"
+  schedule:
+    # 21:00 UTC = 04:00 WIB, setiap hari
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+    inputs:
+      sources:
+        description: "Sumber data (all / firms,air,weather,owm,magma)"
+        default: all
+        type: string
+      days:
+        description: "Rentang hari data FIRMS (1-5)"
+        default: "1"
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Ingest & Upload to Azure Storage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Azure login (OIDC, tanpa secret)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run ingestion
+        env:
+          NASA_FIRMS_MAP_KEY: ${{ secrets.NASA_FIRMS_MAP_KEY }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT }}
+          AZURE_STORAGE_CONTAINER: ${{ vars.AZURE_STORAGE_CONTAINER }}
+          FIRMS_DAYS: ${{ inputs.days || '1' }}
+        run: |
+          python -m src.main \
+            --sources "${{ inputs.sources || 'all' }}" \
+            --days "${{ inputs.days || '1' }}"
+
+      - name: Verify blob di Azure Storage
+        run: |
+          az storage blob list \
+            --account-name "${{ vars.AZURE_STORAGE_ACCOUNT }}" \
+            --container-name "${{ vars.AZURE_STORAGE_CONTAINER }}" \
+            --auth-mode login \
+            --num-results 10 \
+            -o table
+
+      - name: Job summary
+        if: always()
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          import pathlib
+
+          path = pathlib.Path("data/manifest.json")
+          if not path.exists():
+              print("manifest.json tidak ditemukan")
+              raise SystemExit(0)
+
+          manifest = json.loads(path.read_text())
+          print("### Hasil ingestion")
+          print(f"Run ID: `{manifest['run_id']}` — mode `{manifest['mode']}`")
+          print("| Sumber | Status | Jumlah record |")
+          print("| --- | --- | --- |")
+          for name, info in manifest["sources"].items():
+              print(f"| {name} | {info['status']} | {info.get('records', 0)} |")
+          PY
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingestion-run-${{ github.run_id }}
+          path: |
+            data/processed
+            data/manifest.json
+          if-no-files-found: warn
+          retention-days: 7
