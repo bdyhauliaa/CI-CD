@@ -1,0 +1,16 @@
+[project]
+name = "ci-cd-ingestion"
+version = "0.1.0"
+description = "Pipeline ingestion multi-sumber (hotspot, kualitas udara, cuaca, vulkanik) dengan CI/CD GitHub Actions dan Azure Blob Storage"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

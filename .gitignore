@@ -1,0 +1,27 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets
+.env
+.env.local
+
+# Hasil ingestion (dibuat ulang setiap run)
+data/*
+!data/.gitkeep
+
+# Editor & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
