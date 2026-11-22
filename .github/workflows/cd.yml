@@ -61,20 +61,36 @@ jobs:
           OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
           AZURE_STORAGE_ACCOUNT: ${{ vars.AZURE_STORAGE_ACCOUNT }}
           AZURE_STORAGE_CONTAINER: ${{ vars.AZURE_STORAGE_CONTAINER }}
-          FIRMS_DAYS: ${{ inputs.days || '1' }}
+          SOURCES: ${{ inputs.sources || 'all' }}
+          DAYS: ${{ inputs.days || '1' }}
         run: |
-          python -m src.main \
-            --sources "${{ inputs.sources || 'all' }}" \
-            --days "${{ inputs.days || '1' }}"
+          python -m src.main --sources "$SOURCES" --days "$DAYS"
 
-      - name: Verify blob di Azure Storage
+      - name: Verify blob run ini di Azure Storage
         run: |
+          PREFIX=$(python -c "import json,pathlib; print(json.loads(pathlib.Path('data/manifest.json').read_text()).get('blob_prefix') or '')")
+          if [ -z "$PREFIX" ]; then
+            echo "::error::blob_prefix kosong — upload tidak terjadi"
+            exit 1
+          fi
+          echo "prefix: $PREFIX"
+          COUNT=$(az storage blob list \
+            --account-name "${{ vars.AZURE_STORAGE_ACCOUNT }}" \
+            --container-name "${{ vars.AZURE_STORAGE_CONTAINER }}" \
+            --auth-mode login \
+            --prefix "$PREFIX/" \
+            --query "length(@)" -o tsv)
+          echo "jumlah blob run ini: $COUNT"
           az storage blob list \
             --account-name "${{ vars.AZURE_STORAGE_ACCOUNT }}" \
             --container-name "${{ vars.AZURE_STORAGE_CONTAINER }}" \
             --auth-mode login \
-            --num-results 10 \
-            -o table
+            --prefix "$PREFIX/" \
+            --query "[].{nama:name, bytes:properties.contentLength}" -o table
+          if [ "$COUNT" -lt 6 ]; then
+            echo "::error::blob run ini kurang dari 6 (manifest + 5 sumber)"
+            exit 1
+          fi
 
       - name: Job summary
         if: always()

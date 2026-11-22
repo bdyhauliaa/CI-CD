@@ -148,14 +148,20 @@ def main() -> int:
         print(f"[{name}] {len(records)} record -> {target}")
 
     manifest["finished_at"] = utc_now().isoformat()
+    target_prefix = f"runs/{stamp}_{run_id}"
+    will_upload = not args.no_upload and bool(settings.storage_account)
+    manifest["blob_prefix"] = target_prefix if will_upload else None
+    manifest["storage"] = {
+        "account": settings.storage_account or None,
+        "container": settings.storage_container if will_upload else None,
+    }
     write_json(args.out / "manifest.json", manifest)
 
-    if not args.no_upload and settings.storage_account:
-        prefix = f"runs/{stamp}_{run_id}"
+    if will_upload:
         uploaded = storage.upload_directory(
-            args.out, settings.storage_account, settings.storage_container, prefix
+            args.out, settings.storage_account, settings.storage_container, target_prefix
         )
-        print(f"upload: {uploaded} berkas -> {settings.storage_container}/{prefix}")
+        print(f"upload: {uploaded} berkas -> {settings.storage_container}/{target_prefix}")
     elif not args.no_upload:
         print("upload dilewati: AZURE_STORAGE_ACCOUNT kosong")
 
